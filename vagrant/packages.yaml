@@ -1,0 +1,43 @@
+---
+- name: Set repos and packages
+  hosts: all
+  sudo: True
+  gather_facts: True
+
+  # show facts:
+  #     ansible all -m setup -i hosts_vagrant
+
+  tasks:
+    - apt: update_cache=yes
+    - apt: upgrade=yes
+    - apt: name=python-pycurl state=latest install_recommends=no
+
+    - name: default packages
+      apt: name={{item}} state=installed install_recommends=no
+      with_items:
+        - less
+        - vim-nox
+        - whois
+        - curl
+        - libcurl4-openssl-dev
+        - python-dev
+        - supervisor
+
+    - name: system-wide python packages
+      apt: name={{item}} state=latest install_recommends=no
+      with_items:
+        - make
+        - git-core
+        - python-pip
+        - python-mysqldb
+
+    - name: install latest dependencies from pip
+      pip: name={{item}} state=latest use_mirrors=no
+      with_items:
+        - tornado
+        - virtualenv
+        - virtualenv-tools
+        - schema
+        - iso8601
+        - pytz
+        - pycurl

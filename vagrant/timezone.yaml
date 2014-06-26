@@ -1,0 +1,19 @@
+---
+- name: Set the time zone
+  hosts: all
+  sudo: True
+  gather_facts: False
+  vars:
+    timezone: Europe/Moscow
+
+  tasks:
+    - name: set /etc/localtime to {{timezone}}
+      command: /bin/cp /usr/share/zoneinfo/{{timezone}} /etc/localtime
+
+    - name: set /etc/timezone to {{timezone}}
+      template: dest=/etc/timezone src=files/timezone/timezone
+      notify: update tzdata
+
+  handlers:
+    - name: update tzdata
+      command: /usr/sbin/dpkg-reconfigure tzdata --frontend noninteractive

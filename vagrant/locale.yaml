@@ -1,0 +1,21 @@
+---
+- name: Set the locale
+  hosts: all
+  sudo: True
+  gather_facts: False
+  vars:
+    locale: en_US.UTF-8
+
+  tasks:
+    - name: create locale.gen
+      template: dest=/etc/locale.gen src=files/locale/locale.gen
+      notify:
+        - generate locale
+        - update locale
+
+  handlers:
+    - name: generate locale
+      command: /usr/sbin/locale-gen
+
+    - name: update locale
+      command: /usr/sbin/update-locale LANG={{locale}} LC_ALL={{locale}}

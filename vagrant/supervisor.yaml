@@ -1,0 +1,29 @@
+---
+- name: Supervisor configuration
+  hosts: all
+  sudo: True
+  gather_facts: False
+  vars:
+    etc_dir: /etc/supervisor/conf.d
+    log_dir: /var/log/supervisor
+
+
+  tasks:
+    - name: ensure latest supervisor is installed
+      apt: name=supervisor state=latest install_recommends=no update_cache=yes
+
+    - name: ensure {{ etc_dir }} exists
+      file: path={{ etc_dir }} state=directory owner=root group=root mode=0755
+
+    - name: ensure directories for supervisor exist
+      file: path="{{ item }}" state=directory owner=vagrant group=vagrant mode=0755
+      with_items:
+        - '{{ log_dir }}'
+
+    - name: deploy configuration files
+      template: dest={{ item.dest }} src={{ item.src }} owner=root group=root mode={{ item.mode }} backup=no
+      with_items:
+        - { src: 'files/supervisor/cirqle.supervisor.conf', dest: '{{ etc_dir }}/cirqle.conf', mode: '0644' }
+
+    - name: ensure configuration is loaded
+      command: sudo supervisorctl update

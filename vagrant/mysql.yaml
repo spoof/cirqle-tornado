@@ -1,0 +1,51 @@
+---
+- name: MySQL Configuration
+  hosts: all
+  sudo: True
+  gather_facts: False
+  vars:
+    log_dir: /var/log/mysql
+
+  tasks:
+    # - apt_repository: repo="deb http://repo.percona.com/apt precise main"
+    # - apt_key: url=http://www.percona.com/redir/downloads/RPM-GPG-KEY-percona state=present
+
+    # - name: ensure mysql packages are installed
+    #   apt: name={{item}} force=yes state=installed install_recommends=no update_cache=yes
+    #   with_items:
+    #     - percona-server-server-5.6
+    #     - percona-server-client-5.6
+
+    - name: ensure vanilla mysql packages are installed
+      apt: name={{item}} force=yes state=installed install_recommends=no update_cache=yes
+      with_items:
+        - mysql-server-5.5
+        - mysql-client-5.5
+
+    - name: put .my.cnf to /home/vagrant
+      template: dest=/home/vagrant/.my.cnf src=files/mysql/my.cnf
+
+    - name: turn on the detailed query log in {{log_dir}}
+      lineinfile: dest=/etc/mysql/my.cnf regexp='{{item.regexp}}' line='{{item.value}}' state=present
+      with_items:
+        - { regexp: '^\W*general_log_file\s*=', value: 'general_log_file = {{log_dir}}/mysql.log' }
+        - { regexp: '^\W*general_log\s*=', value: 'general_log = 1' }
+      notify: restart mysql
+
+    - name: ensure mysql is running
+      service: name=mysql state=running
+
+    - name: create mysql databases
+      mysql_db: name={{item}} encoding=utf8 state=present
+      with_items:
+        - cirqle
+
+    - name: create mysql users
+      mysql_user: name='{{item.name}}' password='{{item.password}}' priv='{{item.priv}}'
+      with_items:
+        - { name: 'cirqle', password: 'cirqle', priv: 'cirqle.*:ALL' }
+
+
+  handlers:
+    - name: restart mysql
+      service: name=mysql state=restarted

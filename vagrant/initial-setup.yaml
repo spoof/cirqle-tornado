@@ -1,0 +1,6 @@
+---
+- include: locale.yaml
+- include: timezone.yaml
+- include: packages.yaml
+- include: mysql.yaml
+- include: supervisor.yaml
